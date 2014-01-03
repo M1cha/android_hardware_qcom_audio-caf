@@ -603,6 +603,8 @@ int mixer_ctl_set(struct mixer_ctl *ctl, unsigned percent)
         return -1;
     }
 
+    ALOGE("%s: name='%s' percent='%d'", __func__, ctl->info->id.name, percent);
+
     if (is_volume(ctl->info->id.name, &type)) {
         ALOGV("capability: volume\n");
         tlv = calloc(1, DEFAULT_TLV_SIZE);
@@ -803,6 +805,8 @@ int mixer_ctl_select(struct mixer_ctl *ctl, const char *value)
         errno = EINVAL;
         return -1;
     }
+
+    ALOGE("%s: name='%s' value='%s'\n", __func__, ctl->info->id.name, value);
 
     input_str_len =  strnlen(value,64);
 
