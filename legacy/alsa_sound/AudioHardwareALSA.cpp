@@ -2307,8 +2307,6 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     bool bForcePathAgain = false;
     bool bVRMode = false;
     char cVRMode[255]="0";
-    char cVNRMode[255]="2";
-    int VNRMode = 2;
 
     ALOGD("doRouting_Audience_Codec mode:%d Routes:0x%x Enable:%d.\n", mode, device, enable);
 
@@ -2343,13 +2341,6 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
         bVRMode = 0;
     }
     ALOGV("doRouting_Audience_Codec  -> VRMode:%d", bVRMode);
-
-
-    property_get("persist.audio.vns.mode",cVNRMode,"2");
-    if (!strncmp("1", cVNRMode, 1))
-        VNRMode = 1;
-    else
-        VNRMode = 2;
 
     if (mode == AudioSystem::MODE_IN_CALL ||
          mode == AudioSystem::MODE_RINGTONE) {
@@ -2456,9 +2447,9 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                          }
                      }
                      if (bVRMode)
+                     {
                          dwNewPreset = ES310_PRESET_VOICE_RECOGNIZTION_WB;
-                     else
-                         dwNewPreset = ES310_PRESET_ANALOG_BYPASS;
+                     }
                      break;
                 case AudioSystem::DEVICE_IN_BLUETOOTH_SCO_HEADSET:
                      dwNewPath = ES310_PATH_HEADSET;
@@ -2466,7 +2457,13 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                      break;
                 case AudioSystem::DEVICE_IN_WIRED_HEADSET:
                      dwNewPath = ES310_PATH_HEADSET;
-                     dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
+                     dwNewPreset = ES310_PRESET_HEADSET_REC_WB;
+                     char process[128];
+                     property_get("sys.foreground_process", process, "");
+                     if (!strcmp(process, "com.jawbone.up")) {
+                         ALOGV("jawbone, using bypass mode");
+                         dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
+                     }
                      break;
                 case AudioSystem::DEVICE_IN_AUX_DIGITAL:
                 case AudioSystem::DEVICE_IN_VOICE_CALL:
@@ -2476,7 +2473,7 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                      break;
                 default:
                      dwNewPath = ES310_PATH_HANDSET;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
+                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_NB;
                      break;
         }
     }
@@ -2485,15 +2482,6 @@ ROUTE:
 
     ALOGV("doRouting_Audience_Codec: dwOldPath=%d, dwNewPath=%d, prevMode=%d, mode=%d",
                 dwOldPath, dwNewPath, AudiencePrevMode, mode);
-
-
-    if (VNRMode == 1) {
-        ALOGE("Switch to 1-Mic Solution");
-        if (dwNewPreset == ES310_PRESET_HANDSET_INCALL_NB)
-            dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB_1MIC;
-        if (dwNewPreset == ES310_PRESET_HANDSET_VOIP_WB)
-            dwNewPreset = ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC;
-    }
 
     if (AudiencePrevMode != mode)
     {
@@ -2567,8 +2555,8 @@ char* AudioHardwareALSA::getNameByPresetID(int presetID)
               return "ES310_PRESET_HANDSET_INCALL_NB";
         case ES310_PRESET_HEADSET_INCALL_NB:
               return "ES310_PRESET_HEADSET_INCALL_NB";
-        case ES310_PRESET_HANDSET_INCALL_NB_1MIC:
-              return "ES310_PRESET_HANDSET_INCALL_NB_1MIC";
+        case ES310_PRESET_HANDSFREE_REC_NB:
+              return "ES310_PRESET_HANDSFREE_REC_NB";
         case ES310_PRESET_HANDSFREE_INCALL_NB:
               return "ES310_PRESET_HANDSFREE_INCALL_NB";
         case ES310_PRESET_HANDSET_INCALL_WB:
@@ -2589,8 +2577,8 @@ char* AudioHardwareALSA::getNameByPresetID(int presetID)
               return "ES310_PRESET_HANDSFREE_VOIP_WB";
         case ES310_PRESET_VOICE_RECOGNIZTION_WB:
               return "ES310_PRESET_VOICE_RECOGNIZTION_WB";
-        case ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC:
-              return "ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC";
+        case ES310_PRESET_HEADSET_REC_WB:
+              return "ES310_PRESET_HEADSET_REC_WB";
         default:
             return "Unknown";
      }
