@@ -2556,25 +2556,6 @@ ROUTE:
 
         close(fd_codec);
         fd_codec = -1;
-
-RECOVER:
-        if (rc < 0) {
-            ALOGE("E310 do hard reset to recover from error!\n");
-            rc = doAudienceCodec_Init(); /* A1026 needs to do hard reset! */
-            if (!rc) {
-                fd_codec = open("/dev/audience_es310", O_RDWR);
-                if (fd_codec >= 0) {
-                    rc = ioctl(fd_codec, ES310_SET_CONFIG, &dwNewPath);
-                    if (rc == NO_ERROR)
-                        dwOldPath = dwNewPath;
-                    else
-                        ALOGE("Audience Codec Fatal Error! rc %d\n", rc);
-                    close(fd_codec);
-                } else
-                    ALOGE("Audience Codec Fatal Error: Re-init Audience Codec open driver fail!! rc %d\n", fd_codec);
-            } else
-                ALOGE("Audience Codec Fatal Error: Re-init A1026 Failed. rc %d\n", rc);
-        }
     }
 
     return NO_ERROR;
