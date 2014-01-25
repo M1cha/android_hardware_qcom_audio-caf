@@ -127,7 +127,6 @@ extern "C" {
 #define SND_USE_CASE_DEV_DOCK		"Dock"
 /* add new devices to end of list */
 
-
 /*
  * Use Case Modifiers.
  *
