@@ -898,8 +898,6 @@ public:
 
 //XIAOMI_START
 #ifdef USE_ES310
-    static void *CSDInitThreadWrapper(void *me);//i dont know
-    pthread_t CSDInitThread; //i dont know
     static void *AudienceThreadWrapper(void *me);
     void AudienceThreadEntry();
     pthread_t AudienceThread;

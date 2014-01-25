@@ -344,16 +344,7 @@ AudioHardwareALSA::AudioHardwareALSA() :
             if (csd_client_init == NULL) {
                 ALOGE("csd_client_init is NULL");
             } else {
-                //XIAOMI_START
-#ifdef USE_ES310
-                if (mFusion3Platform) {
-                    pthread_create(&CSDInitThread, NULL, CSDInitThreadWrapper, this);
-                    //csd_client_init();
-                }
-#else
                 csd_client_init();
-#endif
-                //XIAOMI_END
             }
 
         }
@@ -2150,13 +2141,6 @@ int uart_load_binary(int fd, char *firmware_path)
         ALOGE("ES310: voiceproc_reset ES310_RESET_CMD error %s\n", strerror(errno));
 
     return ret;
-}
-
-void *AudioHardwareALSA::CSDInitThreadWrapper(void *me) {
-    ALOGV("AudioHardwareALSA::CSDInitThread+");
-    csd_client_init();
-    ALOGV("AudioHardwareALSA::CSDInitThread-");
-    return NULL;
 }
 
 void *AudioHardwareALSA::AudienceThreadWrapper(void *me) {
