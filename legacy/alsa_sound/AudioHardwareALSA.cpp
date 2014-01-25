@@ -1259,11 +1259,6 @@ status_t AudioHardwareALSA::doRouting(int device, char* useCase)
              setInChannels(device);
              ALSAHandleList::iterator it = mDeviceList.end();
              it--;
-//XIAOMI_START
-#ifdef USE_ES310
-             ALOGD("ALSADevice->route mode:%d, device:0x%x, enable:%d", newMode, device, true);
-#endif
-//XIAOMI_END
              mALSADevice->route(&(*it), (uint32_t)device, newMode);
         }
     }
