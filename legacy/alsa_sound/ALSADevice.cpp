@@ -1863,7 +1863,9 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
             return strdup(SND_USE_CASE_DEV_PROXY_RX);
         } else if ((devices & AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET ||
                     devices & AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET) &&
+#ifndef USE_ES310
                     mCallMode != AUDIO_MODE_IN_CALL &&
+#endif
                     devices & AudioSystem::DEVICE_OUT_SPEAKER) {
 #if defined(SAMSUNG_AUDIO) || defined(MOTOROLA_EMU_AUDIO)
             if (AudioUtil::isDockConnected()) {
