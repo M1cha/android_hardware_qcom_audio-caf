@@ -942,6 +942,7 @@ public:
 
     void pauseIfUseCaseTunnelOrLPA();
     void resumeIfUseCaseTunnelOrLPA();
+    bool         isAnyCallActive();
 
 private:
     status_t     openExtOutput(int device);
@@ -959,7 +960,6 @@ private:
     uint32_t     useCaseStringToEnum(const char *usecase);
     void         switchExtOut(int device);
     int          getmCallState(uint32_t vsid, enum call_state state);
-    bool         isAnyCallActive();
     int*         getCallStateForVSID(uint32_t vsid);
     char*        getUcmVerbForVSID(uint32_t vsid);
     char*        getUcmModForVSID(uint32_t vsid);

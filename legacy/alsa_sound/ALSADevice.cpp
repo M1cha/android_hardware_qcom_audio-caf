@@ -57,6 +57,7 @@ static int (*csd_slow_talk)(uint8_t);
 static int (*csd_fens)(uint8_t);
 static int (*csd_start_voice)(void);
 static int (*csd_stop_voice)(void);
+static int fBoot = 1;
 #endif
 #endif
 #ifdef QCOM_ACDB_ENABLED
@@ -963,7 +964,20 @@ ROUTE:
 #ifdef QCOM_CSDCLIENT_ENABLED
 //XIAOMI_START
 #ifdef USE_ES310
-    mParent->doRouting_Audience_Codec(mode, devices, true);
+    unsigned int input_device = 0;
+    if (((devices & AUDIO_DEVICE_IN_ALL) == 0) &&
+        (mCurTxUCMDevice != NULL) &&
+        (mode == AudioSystem::MODE_NORMAL)) {
+        if (!strncmp("Line", mCurTxUCMDevice, MAX_STR_LEN)) {
+            ALOGE("Add Builtin Mic device");
+            input_device = AudioSystem::DEVICE_IN_BUILTIN_MIC;
+        }
+        if (!strncmp("HeadsetMic TX", mCurTxUCMDevice, MAX_STR_LEN)) {
+            ALOGE("Add wired headset device");
+            input_device = AudioSystem::DEVICE_IN_WIRED_HEADSET;
+        }
+    }
+    mParent->doRouting_Audience_Codec(mode, devices | input_device, true);
 #endif
 //XIAOMI_END
     if (isPlatformFusion3() && (inCallDevSwitch == true)) {
@@ -1789,19 +1803,27 @@ void ALSADevice::disableDevice(alsa_handle_t *handle)
                 usecase_type |= getUseCaseType(mods_list[i]);
             }
         }
+//XIAOMI_START
+#ifdef USE_ES310
+            if (fBoot == 1) {
+                fBoot = 0;
+                strlcpy(mCurTxUCMDevice, "Line", sizeof(mCurTxUCMDevice));
+            }
+#endif
+//XIAOMI_END
         ALOGV("usecase_type is %d\n", usecase_type);
-        if (!(usecase_type & USECASE_TYPE_TX) && (strncmp(mCurTxUCMDevice, "None", 4)))
+        if (!(usecase_type & USECASE_TYPE_TX) && (strncmp(mCurTxUCMDevice, "None", 4))) {
             snd_use_case_set(handle->ucMgr, "_disdev", mCurTxUCMDevice);
 //XIAOMI_START
 #ifdef USE_ES310
-            int bDuringIncall = mParent->getCallState();
-            ALOGE("disableDevice --> close the Audience, isDuringCall:%d", bDuringIncall);
-            if ((bDuringIncall == false) && (mCallMode == AUDIO_MODE_NORMAL)) {
+            ALOGV("disableDevice --> close the Audience, isAnyCallActive:%d", mParent->isAnyCallActive());
+            if ((mParent->isAnyCallActive() == false) && (mCallMode == AUDIO_MODE_NORMAL)) {
                 mParent->enableAudienceloopback(0);
                 mParent->doRouting_Audience_Codec( 0, 0, false);
             }
 #endif
 //XIAOMI_END
+        }
         if (!(usecase_type & USECASE_TYPE_RX) && (strncmp(mCurRxUCMDevice, "None", 4)))
             snd_use_case_set(handle->ucMgr, "_disdev", mCurRxUCMDevice);
     } else {
@@ -1881,8 +1903,11 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
 #endif
             return strdup(SND_USE_CASE_DEV_USB_PROXY_RX_SPEAKER); /* USB PROXY RX + SPEAKER */
         } else if (((devices & AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET) ||
-                  (devices & AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET)) &&
-                  mCallMode != AUDIO_MODE_IN_CALL) {
+                  (devices & AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET)) 
+#ifndef USE_ES310
+				&& mCallMode != AUDIO_MODE_IN_CALL
+#endif
+) {
 #if defined(SAMSUNG_AUDIO) || defined(MOTOROLA_EMU_AUDIO)
             if (AudioUtil::isDockConnected()) {
 #ifdef MOTOROLA_EMU_AUDIO
@@ -1954,10 +1979,7 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
                 if (shouldUseHandsetAnc(mDevSettingsFlag, mInChannels)) {
                     return strdup(SND_USE_CASE_DEV_ANC_HANDSET); /* ANC Handset RX */
                 } else {
-                    property_get("persist.audio.voc_ep.xgain", value, "");
-                    return strdup(strcmp(value, "1") == 0 ?
-                                SND_USE_CASE_DEV_VOC_EARPIECE_XGAIN :
-                                SND_USE_CASE_DEV_VOC_EARPIECE); /* Voice HANDSET RX */
+                    return strdup(SND_USE_CASE_DEV_VOC_EARPIECE); /* Voice HANDSET RX */
                 }
 #endif
             } else {

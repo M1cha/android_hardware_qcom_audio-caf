@@ -2284,13 +2284,15 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     bool bForcePathAgain = false;
     bool bVRMode = false;
     char cVRMode[255]="0";
-
-    ALOGD("doRouting_Audience_Codec mode:%d Routes:0x%x Enable:%d.\n", mode, device, enable);
+    char cVNRMode[255]="2";
+    int VNRMode = 2;
 
     if (mAudienceCodecInit != 1) {
         ALOGE("Audience Codec not initialized.\n");
         return -1;
     }
+
+    ALOGD("doRouting_Audience_Codec mode:%d Routes:0x%x Enable:%d.\n", mode, device, enable);
 
     Mutex::Autolock lock(mAudioCodecLock);
     if ((mode < AudioSystem::MODE_CURRENT) || (mode >= AudioSystem::NUM_MODES)) {
@@ -2304,20 +2306,29 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
         goto ROUTE;
     }
 
-    if (((device & AUDIO_DEVICE_OUT_ALL) != 0) && (mode == AudioSystem::MODE_NORMAL))
+    if (((device & AUDIO_DEVICE_IN_ALL) == 0) &&
+        ((device & AUDIO_DEVICE_OUT_ALL) != 0) &&
+        (mode == AudioSystem::MODE_NORMAL))
     {
-        ALOGV("doRouting_Audience_Codec: Normal mode, RX no routing ");
+        ALOGV("doRouting_Audience_Codec: Normal mode, RX no routing\n");
         return 0;
     }
 
     property_get("audio.record.vrmode",cVRMode,"0");
     if (!strncmp("1", cVRMode, 1)) {
         bVRMode = 1;
-    }
-    else {
+    } else {
         bVRMode = 0;
     }
-    ALOGV("doRouting_Audience_Codec  -> VRMode:%d", bVRMode);
+
+    property_get("persist.audio.vns.mode",cVNRMode,"2");
+    if (!strncmp("1", cVNRMode, 1)) {
+        VNRMode = 1;
+    } else {
+        VNRMode = 2;
+    }
+
+    ALOGV("doRouting_Audience_Codec  -> VRMode:%d, VNRMode:%d", bVRMode, VNRMode);
 
     if (mode == AudioSystem::MODE_IN_CALL ||
          mode == AudioSystem::MODE_RINGTONE) {
@@ -2415,13 +2426,7 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                 case AudioSystem::DEVICE_IN_BUILTIN_MIC:
                      {
                          dwNewPath = ES310_PATH_HANDSET;
-                         dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                         char process[128];
-                         property_get("sys.foreground_process", process, "");
-                         if (!strcmp(process, "com.eg.android.AlipayGphone")) {
-                             ALOGV("Alipay, using bypass mode");
-                             dwNewPreset = ES310_PRESET_ANALOG_BYPASS;
-                         }
+                         dwNewPreset = ES310_PRESET_ANALOG_BYPASS;
                      }
                      if (bVRMode)
                      {
@@ -2434,13 +2439,7 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                      break;
                 case AudioSystem::DEVICE_IN_WIRED_HEADSET:
                      dwNewPath = ES310_PATH_HEADSET;
-                     dwNewPreset = ES310_PRESET_HEADSET_REC_WB;
-                     char process[128];
-                     property_get("sys.foreground_process", process, "");
-                     if (!strcmp(process, "com.jawbone.up")) {
-                         ALOGV("jawbone, using bypass mode");
-                         dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
-                     }
+                     dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
                      break;
                 case AudioSystem::DEVICE_IN_AUX_DIGITAL:
                 case AudioSystem::DEVICE_IN_VOICE_CALL:
@@ -2450,12 +2449,22 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
                      break;
                 default:
                      dwNewPath = ES310_PATH_HANDSET;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_NB;
+                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
                      break;
         }
     }
 
 ROUTE:
+
+    if (VNRMode == 1) {
+        ALOGE("Switch to 1-Mic Solution");
+        if (dwNewPreset == ES310_PRESET_HANDSET_INCALL_NB) {
+            dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB_1MIC;
+        }
+        if (dwNewPreset == ES310_PRESET_HANDSET_VOIP_WB) {
+            dwNewPreset = ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC;
+        }
+    }
 
     ALOGV("doRouting_Audience_Codec: dwOldPath=%d, dwNewPath=%d, prevMode=%d, mode=%d",
                 dwOldPath, dwNewPath, AudiencePrevMode, mode);
@@ -2521,6 +2530,25 @@ ROUTE:
 
         close(fd_codec);
         fd_codec = -1;
+
+RECOVER:
+        if (rc < 0) {
+            ALOGE("E310 do hard reset to recover from error!\n");
+            rc = doAudienceCodec_Init(); /* A1026 needs to do hard reset! */
+            if (!rc) {
+                fd_codec = open("/dev/audience_es310", O_RDWR);
+                if (fd_codec >= 0) {
+                    rc = ioctl(fd_codec, ES310_SET_CONFIG, &dwNewPath);
+                    if (rc == NO_ERROR)
+                        dwOldPath = dwNewPath;
+                    else
+                        ALOGE("Audience Codec Fatal Error! rc %d\n", rc);
+                    close(fd_codec);
+                } else
+                    ALOGE("Audience Codec Fatal Error: Re-init Audience Codec open driver fail!! rc %d\n", fd_codec);
+            } else
+                ALOGE("Audience Codec Fatal Error: Re-init A1026 Failed. rc %d\n", rc);
+        }
     }
 
     return NO_ERROR;
@@ -2532,8 +2560,8 @@ char* AudioHardwareALSA::getNameByPresetID(int presetID)
               return "ES310_PRESET_HANDSET_INCALL_NB";
         case ES310_PRESET_HEADSET_INCALL_NB:
               return "ES310_PRESET_HEADSET_INCALL_NB";
-        case ES310_PRESET_HANDSFREE_REC_NB:
-              return "ES310_PRESET_HANDSFREE_REC_NB";
+        case ES310_PRESET_HANDSET_INCALL_NB_1MIC:
+              return "ES310_PRESET_HANDSET_INCALL_NB_1MIC";
         case ES310_PRESET_HANDSFREE_INCALL_NB:
               return "ES310_PRESET_HANDSFREE_INCALL_NB";
         case ES310_PRESET_HANDSET_INCALL_WB:
@@ -2554,8 +2582,12 @@ char* AudioHardwareALSA::getNameByPresetID(int presetID)
               return "ES310_PRESET_HANDSFREE_VOIP_WB";
         case ES310_PRESET_VOICE_RECOGNIZTION_WB:
               return "ES310_PRESET_VOICE_RECOGNIZTION_WB";
-        case ES310_PRESET_HEADSET_REC_WB:
-              return "ES310_PRESET_HEADSET_REC_WB";
+        case ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC:
+              return "ES310_PRESET_HANDSET_INCALL_VOIP_WB_1MIC";
+        case ES310_PRESET_ANALOG_BYPASS:
+              return "ES310_PRESET_ANALOG_BYPASS";
+        case ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS:
+              return "ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS";
         default:
             return "Unknown";
      }
