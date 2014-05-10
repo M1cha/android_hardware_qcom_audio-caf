@@ -744,6 +744,22 @@ void platform_add_backend_name(char *mixer_path, snd_device_t snd_device)
         strlcat(mixer_path, " capture-fm", MIXER_PATH_MAX_LENGTH);
     else if (snd_device == SND_DEVICE_OUT_TRANSMISSION_FM)
         strlcat(mixer_path, " transmission-fm", MIXER_PATH_MAX_LENGTH);
+#ifdef SEPARATE_SPKR_BACKEND
+    else if (snd_device == SND_DEVICE_OUT_SPEAKER)
+        strlcat(mixer_path, " speaker", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_SPEAKER_REVERSE)
+        strlcat(mixer_path, " speaker-reverse", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES)
+        strlcat(mixer_path, " speaker-and-headphones", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_VOICE_SPEAKER)
+        strlcat(mixer_path, " voice-speaker", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_SPEAKER_AND_ANC_HEADSET)
+        strlcat(mixer_path, " speaker-and-anc-headphones", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_SPEAKER_PROTECTED)
+        strlcat(mixer_path, " speaker-protected", MIXER_PATH_MAX_LENGTH);
+    else if (snd_device == SND_DEVICE_OUT_VOIP_SPEAKER)
+        strlcat(mixer_path, " voip-speaker-comm", MIXER_PATH_MAX_LENGTH);
+#endif
 }
 
 int platform_get_pcm_device_id(audio_usecase_t usecase, int device_type)
@@ -968,7 +984,8 @@ int platform_set_voice_volume(void *platform, int volume)
     mixer_ctl_set_array(ctl, set_values, ARRAY_SIZE(set_values));
 
     if (my_data->csd != NULL) {
-        ret = my_data->csd->volume(ALL_SESSION_VSID, volume);
+        ret = my_data->csd->volume(ALL_SESSION_VSID, volume,
+                                   DEFAULT_VOLUME_RAMP_DURATION_MS);
         if (ret < 0) {
             ALOGE("%s: csd_volume error %d", __func__, ret);
         }
@@ -985,7 +1002,7 @@ int platform_set_mic_mute(void *platform, bool state)
     int ret = 0;
     uint32_t set_values[ ] = {0,
                               ALL_SESSION_VSID,
-                              DEFAULT_VOLUME_RAMP_DURATION_MS};
+                              DEFAULT_MUTE_RAMP_DURATION_MS};
 
     set_values[0] = state;
     ctl = mixer_get_ctl_by_name(adev->mixer, mixer_ctl_name);
@@ -998,7 +1015,8 @@ int platform_set_mic_mute(void *platform, bool state)
     mixer_ctl_set_array(ctl, set_values, ARRAY_SIZE(set_values));
 
     if (my_data->csd != NULL) {
-        ret = my_data->csd->mic_mute(ALL_SESSION_VSID, state);
+        ret = my_data->csd->mic_mute(ALL_SESSION_VSID, state,
+                                     DEFAULT_MUTE_RAMP_DURATION_MS);
         if (ret < 0) {
             ALOGE("%s: csd_mic_mute error %d", __func__, ret);
         }
