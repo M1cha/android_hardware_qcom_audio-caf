@@ -319,14 +319,12 @@ static card_mapping_t card_mapping_list[] = {
 #define SND_USE_CASE_DEV_VOIP_HANDSET       "VOIP Handset"
 
 #if defined(USE_ES310) || defined(TAURUS)
-#undef SND_USE_CASE_DEV_VOC_HEADPHONE
 #undef SND_USE_CASE_DEV_VOC_SPEAKER
 #undef SND_USE_CASE_DEV_VOC_LINE
 #undef SND_USE_CASE_DEV_VOIP_EARPIECE
 #undef SND_USE_CASE_DEV_VOIP_HEADPHONE
 #undef SND_USE_CASE_DEV_VOIP_SPEAKER
 
-#define SND_USE_CASE_DEV_VOC_HEADPHONE "Headset VoiceProc"
 #define SND_USE_CASE_DEV_VOC_SPEAKER "Handfree VoiceProc"
 #define SND_USE_CASE_DEV_VOC_LINE "Line Voice"
 #define SND_USE_CASE_DEV_VOIP_EARPIECE "Handset VOIP VoiceProc"
