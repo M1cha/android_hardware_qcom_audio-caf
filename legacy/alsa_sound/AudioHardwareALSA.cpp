@@ -2343,37 +2343,25 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     if (mode == AudioSystem::MODE_IN_CALL ||
          mode == AudioSystem::MODE_RINGTONE) {
         switch (device & AudioSystem::DEVICE_OUT_ALL) {
-            case AudioSystem::DEVICE_OUT_EARPIECE:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB;
-                 break;
             case AudioSystem::DEVICE_OUT_SPEAKER:
                  dwNewPath = ES310_PATH_HANDSFREE;
                  dwNewPreset = ES310_PRESET_HANDSFREE_INCALL_NB;
                  break;
+            case AudioSystem::DEVICE_OUT_AUX_DIGITAL:
             case AudioSystem::DEVICE_OUT_WIRED_HEADSET:
+            case AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET:
+            case AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET:
                  dwNewPath = ES310_PATH_HEADSET;
                  dwNewPreset = ES310_PRESET_HEADSET_INCALL_NB;
                  break;
+            case AudioSystem::DEVICE_OUT_EARPIECE:
             case AudioSystem::DEVICE_OUT_WIRED_HEADPHONE:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB;
-                 break;
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB;
-                 break;
-            case AudioSystem::DEVICE_OUT_AUX_DIGITAL:
-            case AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET:
-            case AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET:
-                 dwNewPath = ES310_PATH_HEADSET;
-                 dwNewPreset = ES310_PRESET_HEADSET_INCALL_NB;
-                 break;
             default:
                  dwNewPath = ES310_PATH_HANDSET;
                  dwNewPreset = ES310_PRESET_HANDSET_INCALL_NB;
@@ -2383,37 +2371,25 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     }
     else if (mode == AudioSystem::MODE_IN_COMMUNICATION) {
         switch (device & AudioSystem::DEVICE_OUT_ALL) {
-            case AudioSystem::DEVICE_OUT_EARPIECE:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_VOIP_WB;
-                 break;
             case AudioSystem::DEVICE_OUT_SPEAKER:
                  dwNewPath = ES310_PATH_HANDSFREE;
                  dwNewPreset = ES310_PRESET_HANDSFREE_VOIP_WB;
                  break;
+            case AudioSystem::DEVICE_OUT_AUX_DIGITAL:
             case AudioSystem::DEVICE_OUT_WIRED_HEADSET:
+            case AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET:
+            case AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET:
                  dwNewPath = ES310_PATH_HEADSET;
                  dwNewPreset = ES310_PRESET_HEADSET_VOIP_WB;
                  break;
+            case AudioSystem::DEVICE_OUT_EARPIECE:
             case AudioSystem::DEVICE_OUT_WIRED_HEADPHONE:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_VOIP_WB;
-                 break;
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_HEADSET:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_SCO_CARKIT:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_HEADPHONES:
             case AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP_SPEAKER:
-                 dwNewPath = ES310_PATH_HANDSET;
-                 dwNewPreset = ES310_PRESET_HANDSET_VOIP_WB;
-                 break;
-            case AudioSystem::DEVICE_OUT_AUX_DIGITAL:
-            case AudioSystem::DEVICE_OUT_ANLG_DOCK_HEADSET:
-            case AudioSystem::DEVICE_OUT_DGTL_DOCK_HEADSET:
-                 dwNewPath = ES310_PATH_HEADSET;
-                 dwNewPreset = ES310_PRESET_HEADSET_VOIP_WB;
-                 break;
             default:
                  dwNewPath = ES310_PATH_HANDSET;
                  dwNewPreset = ES310_PRESET_HANDSET_VOIP_WB;
@@ -2424,43 +2400,34 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     else {
         switch (device & AudioSystem::DEVICE_IN_ALL)
         {
-                //TX
-                case AudioSystem::DEVICE_IN_COMMUNICATION:
-                     dwNewPath = ES310_PATH_HANDSFREE;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                     break;
-                case AudioSystem::DEVICE_IN_AMBIENT:
-                     dwNewPath = ES310_PATH_HANDSFREE;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                     break;
-                case AudioSystem::DEVICE_IN_BUILTIN_MIC:
-                     {
-                         dwNewPath = ES310_PATH_HANDSET;
-                         dwNewPreset = ES310_PRESET_ANALOG_BYPASS;
-                     }
-                     if (bVRMode)
-                     {
-                         dwNewPreset = ES310_PRESET_VOICE_RECOGNIZTION_WB;
-                     }
-                     break;
-                case AudioSystem::DEVICE_IN_BLUETOOTH_SCO_HEADSET:
-                     dwNewPath = ES310_PATH_HEADSET;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                     break;
-                case AudioSystem::DEVICE_IN_WIRED_HEADSET:
-                     dwNewPath = ES310_PATH_HEADSET;
-                     dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
-                     break;
-                case AudioSystem::DEVICE_IN_AUX_DIGITAL:
-                case AudioSystem::DEVICE_IN_VOICE_CALL:
-                case AudioSystem::DEVICE_IN_BACK_MIC:
-                     dwNewPath = ES310_PATH_HANDSET;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                     break;
-                default:
-                     dwNewPath = ES310_PATH_HANDSET;
-                     dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
-                     break;
+            //TX
+            case AudioSystem::DEVICE_IN_COMMUNICATION:
+            case AudioSystem::DEVICE_IN_AMBIENT:
+                 dwNewPath = ES310_PATH_HANDSFREE;
+                 dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
+                 break;
+            case AudioSystem::DEVICE_IN_BUILTIN_MIC:
+                 dwNewPath = ES310_PATH_HANDSET;
+                 if (bVRMode)
+                     dwNewPreset = ES310_PRESET_VOICE_RECOGNIZTION_WB;
+                 else
+                     dwNewPreset = ES310_PRESET_ANALOG_BYPASS;
+                 break;
+            case AudioSystem::DEVICE_IN_BLUETOOTH_SCO_HEADSET:
+                 dwNewPath = ES310_PATH_HEADSET;
+                 dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
+                 break;
+            case AudioSystem::DEVICE_IN_WIRED_HEADSET:
+                 dwNewPath = ES310_PATH_HEADSET;
+                 dwNewPreset = ES310_PRESET_HEADSET_MIC_ANALOG_BYPASS;
+                 break;
+            case AudioSystem::DEVICE_IN_AUX_DIGITAL:
+            case AudioSystem::DEVICE_IN_VOICE_CALL:
+            case AudioSystem::DEVICE_IN_BACK_MIC:
+            default:
+                 dwNewPath = ES310_PATH_HANDSET;
+                 dwNewPreset = ES310_PRESET_HANDSFREE_REC_WB;
+                 break;
         }
     }
 
