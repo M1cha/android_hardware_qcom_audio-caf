@@ -2445,13 +2445,6 @@ ERROR:
     return ret;
 }
 
-void *AudioHardwareALSA::CSDInitThreadWrapper(void *me) {
-    ALOGV("AudioHardwareALSA::CSDInitThread+");
-    csd_client_init();
-    ALOGV("AudioHardwareALSA::CSDInitThread-");
-    return NULL;
-}
-
 void *AudioHardwareALSA::AudienceThreadWrapper(void *me) {
     static_cast<AudioHardwareALSA *>(me)->AudienceThreadEntry();
     return NULL;
