@@ -1885,7 +1885,7 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
                 mCallMode == AUDIO_MODE_IN_COMMUNICATION) {
 #endif
 
-#if defined(USE_ES310) || defined(TAURUS)
+#if defined(USE_ES310)
                 return strdup(SND_USE_CASE_DEV_VOC_EARPIECE);
 #else
                 if (shouldUseHandsetAnc(mDevSettingsFlag, mInChannels)) {
@@ -1917,7 +1917,7 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
                 return strdup(SND_USE_CASE_DEV_FM_SPEAKER);
             }
 #endif
-#if defined(USE_ES310) || defined(TAURUS)
+#if defined(USE_ES310)
             if (mCallMode == AUDIO_MODE_IN_COMMUNICATION) {
                 ALOGV("VOIP mode using SND_USE_CASE_DEV_VOIP_SPEAKER");
                 return strdup(SND_USE_CASE_DEV_VOC_SPEAKER);
@@ -2136,25 +2136,6 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
 #endif
                 else {
 
-#ifdef TAURUS
-                if (mCallMode == AudioSystem::MODE_IN_CALL ||
-                    mCallMode == AudioSystem::MODE_IN_COMMUNICATION) {
-                    if (((rxDevice != NULL) &&
-                        !strncmp(rxDevice, SND_USE_CASE_DEV_VOC_EARPIECE,
-                        (strlen(SND_USE_CASE_DEV_VOC_EARPIECE)+1))) ||
-                        ((rxDevice == NULL) &&
-                        !strncmp(mCurRxUCMDevice, SND_USE_CASE_DEV_VOC_EARPIECE,
-                        (strlen(SND_USE_CASE_DEV_VOC_EARPIECE)+1)))) {
-                        ALOGE("Phone call Receiver mode - dual MIC");
-                        return strdup(SND_USE_CASE_DEV_DUAL_MIC_ENDFIRE); /* BUILTIN-MIC TX */
-                    } else {
-                        ALOGE("Phone call Speaker mode - Back Mic Voice ");
-                        return strdup(SND_USE_CASE_DEV_VOC_LINE_BACK); /* BUILTIN-MIC TX */
-                    }
-                } else {
-                    return strdup(SND_USE_CASE_DEV_LINE_MAIN); /* MAIN-MIC TX */
-                }
-#endif
 #ifdef USE_ES310
                 if (mCallMode == AUDIO_MODE_IN_CALL) {
                     return strdup(SND_USE_CASE_DEV_VOC_LINE); /* VOICE BUILTIN-MIC TX */
@@ -2176,7 +2157,7 @@ char* ALSADevice::getUCMDevice(uint32_t devices, int input, char *rxDevice)
             return strdup(SND_USE_CASE_DEV_HDMI_TX); /* HDMI TX */
         } else if ((devices & AudioSystem::DEVICE_IN_WIRED_HEADSET)) {
 
-#if defined(USE_ES310) || defined(TAURUS)
+#if defined(USE_ES310)
             if (mCallMode == AUDIO_MODE_IN_CALL ||
                 mCallMode == AUDIO_MODE_IN_COMMUNICATION)
             {

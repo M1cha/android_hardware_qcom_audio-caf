@@ -318,9 +318,7 @@ static card_mapping_t card_mapping_list[] = {
 #define SND_USE_CASE_DEV_VOIP_LINE          "VOIP Line"
 #define SND_USE_CASE_DEV_VOIP_HANDSET       "VOIP Handset"
 
-#if defined(USE_ES310) || defined(TAURUS)
-#define SND_USE_CASE_DEV_VOC_LINE_BACK "Line BackMic Voice"
-#define SND_USE_CASE_DEV_LINE_MAIN "Line Main"
+#if defined(USE_ES310)
 #define SND_USE_CASE_DEV_VOC_HEADSET_MIC "HeadsetMic Voice TX"
 #endif
 
