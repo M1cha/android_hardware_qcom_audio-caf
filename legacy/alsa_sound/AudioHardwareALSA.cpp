@@ -615,6 +615,11 @@ status_t AudioHardwareALSA::setParameters(const String8& keyValuePairs)
 
     ALOGV("%s() ,%s", __func__, keyValuePairs.string());
 
+    key = String8(AudioParameter::keyInputSource);
+    if (param.get(key, value) == NO_ERROR) {
+       mALSADevice->mkeyInputSource = (value == "1");
+    }
+
 #ifdef QCOM_ADSP_SSR_ENABLED
     key = String8(AudioParameter::keyADSPStatus);
     if (param.get(key, value) == NO_ERROR) {
@@ -2594,7 +2599,6 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
     bool bPresetAgain = false;
     bool bForcePathAgain = false;
     bool bVRMode = false;
-    char cVRMode[255]="0";
     char cVNRMode[255]="2";
     int VNRMode = 2;
 
@@ -2625,12 +2629,7 @@ status_t AudioHardwareALSA::doRouting_Audience_Codec(int mode, int device, bool 
         return 0;
     }
 
-    property_get("audio.record.vrmode",cVRMode,"0");
-    if (!strncmp("1", cVRMode, 1)) {
-        bVRMode = 1;
-    } else {
-        bVRMode = 0;
-    }
+    bVRMode = mALSADevice->mkeyInputSource;
 
     property_get("persist.audio.vns.mode",cVNRMode,"2");
     if (!strncmp("1", cVNRMode, 1)) {

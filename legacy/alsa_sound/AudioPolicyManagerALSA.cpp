@@ -1201,16 +1201,6 @@ status_t AudioPolicyManager::startInput(audio_io_handle_t input)
 
     mpClientInterface->setParameters(input, param.toString());
 
-#ifdef USE_ES310
-    char cVRMode[255];
-    if (aliasSource)
-        strcpy(cVRMode, "1");
-    else
-        strcpy(cVRMode, "0");
-    ALOGV("startInput -> audio.record.vrmode:%s", cVRMode);
-    property_set("audio.record.vrmode", cVRMode);
-#endif
-
     inputDesc->mRefCount = 1;
     return NO_ERROR;
 }

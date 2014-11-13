@@ -393,6 +393,7 @@ public:
     bool mSSRComplete;
     int mCurDevice;
     long avail_in_ms;
+    bool mkeyInputSource;
 
 #ifdef USE_ES310
     friend class AudioHardwareALSA;
