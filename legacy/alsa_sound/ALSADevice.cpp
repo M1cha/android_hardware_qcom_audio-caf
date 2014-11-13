@@ -91,73 +91,6 @@ namespace android_audio_legacy
 {
 
 #ifdef USE_ES310
-void *ALSADevice::csdThreadWrapper(void *me) {
-    static_cast<ALSADevice *>(me)->csdThreadEntry();
-    return NULL;
-}
-
-void ALSADevice::csdThreadEntry() {
-    ALOGV("ALSADevice::csdThreadEntry +");
-    pid_t tid  = gettid();
-    int err;
-    int command_size = 0;
-    androidSetThreadPriority(tid, ANDROID_PRIORITY_URGENT_AUDIO);
-    m_csdCmd = CMD_CSD_READY;
-    while(!m_killcsdThread) {
-        while (!CSDCmdQueue.empty())  {
-            List<CSDCommand>::iterator it = CSDCmdQueue.begin();
-            CSDCommand csdcommand = *it;
-            ALOGE("CSDCommand, cmd:%d, rx:%d, tx:%d, flag:%d",
-                csdcommand.cmd, csdcommand.rx_id, csdcommand.tx_id, csdcommand.devSetFlag);
-            switch (csdcommand.cmd)
-            {
-                case CMD_CSD_START_VOICE:
-                {
-                    ALOGV("ALSADevice::csdThreadEntry, csd_client_start_voice");
-                    err = csd_start_voice();
-                    if (err < 0) {
-                        ALOGE("startVoiceCall: CMD_CSD_START_VOICE error %d\n", err);
-                    }
-                    break;
-                }
-                case CMD_CSD_END_VOICE:
-                {
-                    ALOGV("ALSADevice::csdThreadEntry, csd_client_stop_voice");
-                    err = csd_stop_voice();
-                    if (err < 0) {
-                        ALOGE("s_close: CMD_CSD_END_VOICE error %d\n", err);
-                    }
-                    break;
-                }
-                case CMD_CSD_ENABLE_DEVICE:
-                    ALOGV("ALSADevice::csdThreadEntry, csd_client_enable_device");
-                    err = csd_enable_device(csdcommand.rx_id, csdcommand.tx_id, csdcommand.devSetFlag);
-                    if (err < 0) {
-                        ALOGE("s_close: CMD_CSD_DISABLE_DEVICE error %d\n", err);
-                    }
-                    break;
-                case CMD_CSD_DISABLE_DEVICE:
-                    ALOGV("ALSADevice::csdThreadEntry, csd_client_disable_device");
-                    err = csd_disable_device();
-                    if (err < 0) {
-                        ALOGE("s_close: CMD_CSD_DISABLE_DEVICE error %d\n", err);
-                    }
-                    break;
-                default:
-                    m_csdCmd = CMD_CSD_READY;
-            }
-            CSDCmdQueue.erase(it);
-        }
-        pthread_mutex_lock(&m_csd_mutex);
-        pthread_cond_wait(&m_csd_cv, &m_csd_mutex);
-        pthread_mutex_unlock(&m_csd_mutex);
-        if (CSDCmdQueue.size() != 0)
-            ALOGV("CSD command size:%d", CSDCmdQueue.size());
-        continue;
-    }
-    ALOGV("ALSADevice::csdThreadEntry -");
-}
-
 ALSADevice::ALSADevice(AudioHardwareALSA* parent) {
 #else
 ALSADevice::ALSADevice() {
@@ -217,12 +150,6 @@ ALSADevice::ALSADevice() {
 #ifdef USE_ES310
     mPrevDevice = 0;
     mParent = parent;
-    pthread_mutex_init(&m_csd_mutex, NULL);
-    pthread_cond_init (&m_csd_cv, NULL);
-    m_killcsdThread = false;
-    m_csdCmd = CMD_CSD_READY;
-    ALOGV("Creating CSD Thread");
-    pthread_create(&csdThread, NULL, csdThreadWrapper, this);
 #endif
 
 #ifdef SEPERATED_AUDIO_INPUT
@@ -241,13 +168,6 @@ ALSADevice::~ALSADevice()
         mProxyParams.mCaptureBuffer = NULL;
     }
     mProxyParams.mProxyState = proxy_params::EProxyClosed;
-
-#ifdef USE_ES310
-    m_killcsdThread = true;
-    pthread_cond_signal(&m_csd_cv);
-    pthread_join(csdThread,NULL);
-    ALOGV("CSD Thread Killed");
-#endif
 
 }
 

@@ -2488,7 +2488,7 @@ void AudioHardwareALSA::AudienceThreadEntry() {
         ALOGV("Audience command:%d", mAudienceCmd);
         continue;
     }
-    ALOGV("ALSADevice::csdThreadEntry -");
+    ALOGV("AudioHardwareALSA::AudienceThreadEntry -");
 }
 
 status_t AudioHardwareALSA::doAudienceCodec_Init(void)

@@ -334,45 +334,12 @@ struct use_case_t {
 
 typedef List < use_case_t > ALSAUseCaseList;
 
-#ifdef USE_ES310
-class CSDCommand
-{
-public:
-    CSDCommand(int command, int rx = 0, int tx = 0, uint32_t Flag = 0)
-    {
-        cmd = command;
-        rx_id = rx;
-        tx_id = tx;
-        devSetFlag = Flag;
-    };
-    int cmd;
-    int rx_id;
-    int tx_id;
-    uint32_t devSetFlag;
-};
-#endif
-
 class ALSADevice
 {
 
 public:
 
 #ifdef USE_ES310
-    static void *csdThreadWrapper(void *me);
-    void csdThreadEntry();
-    List <CSDCommand>  CSDCmdQueue;
-    pthread_t csdThread;
-    pthread_mutex_t m_csd_mutex;
-    pthread_cond_t m_csd_cv;
-    int m_csdCmd;
-    bool m_killcsdThread;
-    enum {
-        CMD_CSD_READY = -1,
-        CMD_CSD_START_VOICE = 0,
-        CMD_CSD_END_VOICE    = 1,
-        CMD_CSD_ENABLE_DEVICE = 2,
-        CMD_CSD_DISABLE_DEVICE = 3,
-    };
     int mPrevDevice;
     ALSADevice(AudioHardwareALSA* parent);
 #else
