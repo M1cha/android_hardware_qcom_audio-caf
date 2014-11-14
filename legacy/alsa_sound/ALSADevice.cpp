@@ -884,11 +884,11 @@ ROUTE:
     if (((devices & AUDIO_DEVICE_IN_ALL) == 0) &&
         (mCurTxUCMDevice != NULL) &&
         (mode == AudioSystem::MODE_NORMAL)) {
-        if (!strncmp("Line", mCurTxUCMDevice, MAX_STR_LEN)) {
+        if (!strncmp(SND_USE_CASE_DEV_LINE, mCurTxUCMDevice, MAX_STR_LEN)) {
             ALOGE("Add Builtin Mic device");
             input_device = AudioSystem::DEVICE_IN_BUILTIN_MIC;
         }
-        if (!strncmp("Headset", mCurTxUCMDevice, MAX_STR_LEN)) {
+        if (!strncmp(SND_USE_CASE_DEV_HEADSET, mCurTxUCMDevice, MAX_STR_LEN)) {
             ALOGE("Add wired headset device");
             input_device = AudioSystem::DEVICE_IN_WIRED_HEADSET;
         }
@@ -1721,10 +1721,12 @@ void ALSADevice::disableDevice(alsa_handle_t *handle)
         }
 
 #ifdef USE_ES310
-            if (fBoot == 1) {
-                fBoot = 0;
-                strlcpy(mCurTxUCMDevice, "Line", sizeof(mCurTxUCMDevice));
-            }
+        // workaround to fix closing mic
+        // TODO: do we really need this?
+        if (fBoot == 1) {
+            fBoot = 0;
+            strlcpy(mCurTxUCMDevice, SND_USE_CASE_DEV_LINE, sizeof(mCurTxUCMDevice));
+        }
 #endif
 
         ALOGV("usecase_type is %d\n", usecase_type);
